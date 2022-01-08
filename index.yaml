@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  powerdns:
+  - apiVersion: v2
+    appVersion: 4.5.2
+    created: "2022-01-08T11:50:49.379280475Z"
+    description: PowerDNS Authoritative
+    digest: b37e31ed54827af6f61e85a980468e93b47f0e0028485c2933880c84b72f26ee
+    name: powerdns
+    type: application
+    urls:
+    - https://github.com/arren-helios/helm-charts/releases/download/powerdns-0.3.9/powerdns-0.3.9.tgz
+    version: 0.3.9
+generated: "2022-01-08T11:50:49.156567458Z"
