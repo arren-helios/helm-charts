@@ -1,0 +1,31 @@
+gpgsql:
+  host: localhost
+  dbname: pdns
+
+webserver:
+  enabled: true
+  api: yes
+  address: 0.0.0.0
+  allowFrom: 0.0.0.0/0
+
+image:
+  repository: arren/powerdns
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+service:
+  type: ClusterIP
+  # ip: 172.28.0.230
+  dnsPort: 53
+  httpPort: 80
+
+disruptionBudget:
+  enabled: true
+  minAvailable: 1
+  # maxUnavailable: 0

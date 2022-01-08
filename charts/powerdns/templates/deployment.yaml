@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fullname" . }}
+  labels:
+    {{- include "labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "selectorLabels" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      volumes:
+        - name: config
+          configMap:
+            name: config
+        - name: socket-dir
+          emptyDir:
+            medium: Memory
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: Always
+          args:
+            - --local-port=5300
+            - --gpgsql-user=$(POWERDNS_GPGSQL_USER)
+            - --gpgsql-password=$(POWERDNS_GPGSQL_PASSWORD)
+            {{- if and .Values.webserver.enabled .Values.webserver.api }}
+            - --api-key=$(POWERDNS_API_KEY)
+            {{- end }}
+            - --default-soa-edit=INCEPTION-INCREMENT
+            - --default-soa-edit-signed=INCEPTION-INCREMENT
+          env:
+            {{- if and .Values.webserver.enabled .Values.webserver.api }}
+            - name: POWERDNS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: webserver
+                  key: api-key
+            {{- end }}
+            - name: POWERDNS_GPGSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: gpgsql
+                  key: user
+            - name: POWERDNS_GPGSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: gpgsql
+                  key: password
+          volumeMounts:
+            - mountPath: /etc/pdns
+              name: config
+            - mountPath: /var/run/pdns
+              name: socket-dir
+          ports:
+            - name: http
+              containerPort: 8081
+            - name: dns
+              containerPort: 5300
+            - name: dns-udp
+              containerPort: 5300
+              protocol: UDP
+          readinessProbe:
+            tcpSocket:
+              port: dns
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: dns
+            periodSeconds: 20
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

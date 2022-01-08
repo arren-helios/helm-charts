@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fullname" . }}
+  labels:
+    {{- include "labels" . | nindent 4 }}
+  annotations:
+    metallb.universe.tf/allow-shared-ip: {{ include "fullname" . }}
+spec:
+  type: {{ .Values.service.type }}
+  {{- with .Values.service.ip }}
+  loadBalancerIP: {{ . }}
+  {{- end }}
+  ports:
+    - name: dns
+      port: {{ .Values.service.dnsPort }}
+      targetPort: dns
+    {{- if and .Values.webserver.enabled }}
+    - name: http
+      port: {{ .Values.service.httpPort }}
+      targetPort: http
+    {{- end }}
+  selector:
+    {{- include "selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fullname" . }}-udp
+  labels:
+    {{- include "labels" . | nindent 4 }}
+  annotations:
+    metallb.universe.tf/allow-shared-ip: {{ include "fullname" . }}
+spec:
+  type: {{ .Values.service.type }}
+  {{- with .Values.service.ip }}
+  loadBalancerIP: {{ . }}
+  {{- end }}
+  ports:
+    - name: dns
+      port: {{ .Values.service.dnsPort }}
+      targetPort: dns-udp
+      protocol: UDP
+  selector:
+    {{- include "selectorLabels" . | nindent 4 }}
