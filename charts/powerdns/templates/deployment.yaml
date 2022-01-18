@@ -58,20 +58,20 @@ spec:
             - mountPath: /var/run/pdns
               name: socket-dir
           ports:
-            - name: http
-              containerPort: 8081
             - name: dns
               containerPort: 5300
-            - name: dns-udp
-              containerPort: 5300
               protocol: UDP
+            - name: dns-tcp
+              containerPort: 5300
+            - name: http
+              containerPort: 8081
           readinessProbe:
             tcpSocket:
-              port: dns
+              port: dns-tcp
             periodSeconds: 10
           livenessProbe:
             tcpSocket:
-              port: dns
+              port: dns-tcp
             periodSeconds: 20
           securityContext:
             readOnlyRootFilesystem: true
