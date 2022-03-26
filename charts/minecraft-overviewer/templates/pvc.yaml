@@ -1,0 +1,20 @@
+{{- if .Values.render.persistence.enabled }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "overviewer.fullname" . }}
+  labels:
+    {{- include "overviewer.labels" . | nindent 4 }}
+spec:
+  storageClassName: {{ .Values.render.persistence.storageClass | default "" }}
+  accessModes:
+    {{- range .Values.render.persistence.accessModes }}
+    - {{ . | quote }}
+    {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.render.persistence.size | quote }}
+  {{- if .Values.render.persistence.volumeName }}
+  volumeName: {{ .Values.render.persistence.volumeName | quote }}
+  {{- end }}
+{{- end }}

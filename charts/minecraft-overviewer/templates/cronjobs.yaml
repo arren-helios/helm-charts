@@ -1,0 +1,97 @@
+{{- if .Values.render.persistence.enabled }}
+{{- if .Values.render.schedule.render }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "overviewer.fullname" . }}-render
+  labels:
+    {{- include "overviewer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: render
+spec:
+  schedule: {{ .Values.render.schedule.render | quote }}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "overviewer.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: render
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: render
+              image: "{{ .Values.render.image.repository }}:{{ .Values.render.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.render.image.pullPolicy }}
+              args:
+                - -c
+                - /overviewer/config.py
+              volumeMounts:
+                - mountPath: /var/lib/minecraft/world
+                  readOnly: true
+                  name: world
+                - mountPath: /overviewer
+                  name: config
+                - mountPath: /usr/share/nginx/html
+                  name: map
+              resources:
+                {{- toYaml .Values.render.resources | nindent 16 }}
+          volumes:
+            - name: config
+              configMap:
+                name: {{ include "overviewer.fullname" . }}
+            - name: world
+              {{- toYaml .Values.render.worldVolume | nindent 14 }}
+            - name: map
+              persistentVolumeClaim:
+                claimName: {{ include "overviewer.fullname" . }}
+{{- end }}
+{{- if .Values.render.schedule.genpoi }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "overviewer.fullname" . }}-genpoi
+  labels:
+    {{- include "overviewer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: render
+spec:
+  schedule: {{ .Values.render.schedule.genpoi | quote }}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "overviewer.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: render
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: genpoi
+              image: "{{ .Values.render.image.repository }}:{{ .Values.render.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.render.image.pullPolicy }}
+              args:
+                - -c
+                - /overviewer/config.py
+                - --genpoi
+              volumeMounts:
+                - mountPath: /var/lib/minecraft/world
+                  readOnly: true
+                  name: world
+                - mountPath: /overviewer
+                  name: config
+                - mountPath: /usr/share/nginx/html
+                  name: map
+          volumes:
+            - name: config
+              configMap:
+                name: {{ include "overviewer.fullname" . }}
+            - name: world
+              {{- toYaml .Values.render.worldVolume | nindent 14 }}
+            - name: map
+              persistentVolumeClaim:
+                claimName: {{ include "overviewer.fullname" . }}
+{{- end }}
+{{- end }}
