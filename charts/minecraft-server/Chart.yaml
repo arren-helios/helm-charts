@@ -1,0 +1,7 @@
+apiVersion: v2
+appVersion: 1.18.2
+description: Minecraft game server
+home: https://www.minecraft.net
+name: minecraft-server
+type: application
+version: 0.4.15
