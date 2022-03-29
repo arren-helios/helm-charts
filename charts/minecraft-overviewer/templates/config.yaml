@@ -1,88 +1,74 @@
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "overviewer.fullname" . }}
+  name: {{ include "overviewer.fullname" . }}-config
   labels:
     {{- include "overviewer.labels" . | nindent 4 }}
     app.kubernetes.io/component: render
 data:
   config.py: |
-    global escape
-    from html import escape
-
-    worlds["World"] = "/var/lib/minecraft/world"
+    worlds[{{ .Values.config.worldName | quote }}] = "/var/lib/minecraft/world"
     outputdir = "/usr/share/nginx/html"
     texturepath = "/opt/textures"
-    defaultzoom = 5
+    customwebassets = "/overviewer/webassets"
+    defaultzoom = {{ .Values.config.defaultZoom }}
+    processes = {{ .Values.config.processes }}
 
-    def playerIcons(poi):
-        if poi['id'] == 'Player':
-            poi['icon'] = "https://overviewer.org/avatar/%s" % poi['EntityId']
-            return "Last known location for %s" % poi['EntityId']
+    from .observer import MultiplexingObserver, LoggingObserver, JSObserver
+    loggingObserver = LoggingObserver()
+    jsObserver = JSObserver(outputdir)
+    observer = MultiplexingObserver(loggingObserver, jsObserver)
+    {{- .Values.config.inlineConfig | nindent 4 }}
 
-    def signFilter(poi):
-        if poi['id'] == 'Sign' or poi['id'] == 'minecraft:sign':
-            return escape("\n".join([poi['Text1'], poi['Text2'], poi['Text3'], poi['Text4']]))
-
-    def townFilter(poi):
-        if poi['id'] == 'Town':
-            try:
-                return (poi['name'], poi['description'])
-            except KeyError:
-                return poi['name'] + '\n'
-
-    renders["day"] = {
-        "world": "World",
-        "rendermode": "lighting",
-        "title": "Day",
+    end_smooth_lighting = [Base(), EdgeLines(), SmoothLighting(strength=0.5)]
+    {{- range .Values.config.renders }}
+    renders[{{ .name | quote }}] = {
+        "title": {{ .title | default (title .name) | quote }},
+        "world": {{ $.Values.config.worldName | quote }},
+        {{- if .dimension }}
+        "dimension": {{ .dimension | quote }},
+        {{- end }}
+        "rendermode": {{ .renderMode }},
         "markers": [
-            dict(name="Players", filterFunction=playerIcons, checked=True, createInfoWindow=False),
-            dict(name="Signs", filterFunction=signFilter),
-            dict(name="Towns", filterFunction=townFilter, icon="markers/marker_town.png"),
+            {{- range .markers }}
+            {{ get $.Values.config.markers . }},
+            {{- end }}
         ],
     }
-
-    renders["night"] = {
-        "world": "World",
-        "rendermode": "night",
-        "title": "Night",
-        "markers": [
-            dict(name="Players", filterFunction=playerIcons, checked=True, createInfoWindow=False),
-            dict(name="Signs", filterFunction=signFilter),
-            dict(name="Towns", filterFunction=townFilter, icon="markers/marker_town.png"),
-        ],
-    }
-
-    renders["cave"] = {
-        "world": "World",
-        "rendermode": "cave",
-        "title": "Cave",
-        "markers": [
-            dict(name="Players", filterFunction=playerIcons, checked=True, createInfoWindow=False),
-            dict(name="Signs", filterFunction=signFilter),
-        ],
-    }
-
-    # renders["nether"] = {
-    #     "world": "World",
-    #     "dimension": "nether",
-    #     "rendermode": "nether_lighting",
-    #     "title": "Nether",
-    #     "markers": [
-    #         dict(name="Players", filterFunction=playerIcons, checked=True, createInfoWindow=False),
-    #     ],
-    # }
-
-    # renders["end"] = {
-    #     "world": "World",
-    #     "dimension": "end",
-    #     "rendermode": [
-    #         Base(),
-    #         EdgeLines(),
-    #         SmoothLighting(strength=0.5),
-    #     ],
-    #     "title": "End",
-    #     "markers": [
-    #         dict(name="Players", filterFunction=playerIcons, checked=True, createInfoWindow=False),
-    #     ],
-    # }
+    {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "overviewer.fullname" . }}-webassets
+  labels:
+    {{- include "overviewer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: render
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>{title}</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="generator" content="Minecraft-Overviewer {version}" />
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+        <script type="text/javascript" src="overviewerConfig.js"></script>
+        <script type="text/javascript" src="overviewer.js"></script>
+        <script type="text/javascript" src="baseMarkers.js"></script>
+        <link rel="stylesheet" href="leaflet.css" />
+        <script src="leaflet.js"></script>
+        <link rel="stylesheet" href="overviewer.css" type="text/css" />
+      </head>
+      <body onload="overviewer.util.initialize()">
+        <div id="mcmap"></div>
+        <script type="text/javascript">
+            overviewer.util.ready(function() {
+              overviewer.worldCtrl.remove();
+              overviewer.compass.remove();
+              overviewer.map.attributionControl.remove();
+            });
+        </script>
+      </body>
+    </html>

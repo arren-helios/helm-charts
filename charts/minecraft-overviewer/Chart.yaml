@@ -1,7 +1,7 @@
 apiVersion: v2
-appVersion: 0.17.47
+appVersion: 0.17.47-eb415c6-ovo
 description: A high-resolution Minecraft world renderer with a LeafletJS interface
 home: https://overviewer.org/
 name: minecraft-overviewer
 type: application
-version: 0.4.16
+version: 0.5.32

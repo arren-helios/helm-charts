@@ -1,4 +1,4 @@
-{{- if .Values.render.persistence.enabled }}
+{{- if .Values.persistence.enabled }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -6,15 +6,15 @@ metadata:
   labels:
     {{- include "overviewer.labels" . | nindent 4 }}
 spec:
-  storageClassName: {{ .Values.render.persistence.storageClass | default "" }}
+  storageClassName: {{ .Values.persistence.storageClass | default "" }}
   accessModes:
-    {{- range .Values.render.persistence.accessModes }}
+    {{- range .Values.persistence.accessModes }}
     - {{ . | quote }}
     {{- end }}
   resources:
     requests:
-      storage: {{ .Values.render.persistence.size | quote }}
-  {{- if .Values.render.persistence.volumeName }}
-  volumeName: {{ .Values.render.persistence.volumeName | quote }}
+      storage: {{ .Values.persistence.size | quote }}
+  {{- if .Values.persistence.volumeName }}
+  volumeName: {{ .Values.persistence.volumeName | quote }}
   {{- end }}
 {{- end }}

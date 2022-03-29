@@ -1,24 +1,36 @@
+{{- if .Values.nginx.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "overviewer.fullname" . }}
   labels:
     {{- include "overviewer.labels" . | nindent 4 }}
-    app.kubernetes.io/component: web
-  {{- with .Values.web.ingress.annotations }}
+    app.kubernetes.io/component: nginx
+  {{- with .Values.nginx.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  ingressClassName: {{ .Values.web.ingress.className }}
+  ingressClassName: {{ .Values.nginx.ingress.className }}
+  {{- if .Values.nginx.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        {{- range .Values.nginx.ingress.hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .Values.nginx.ingress.tls.secretName | default (printf "%s-tls" (include "overviewer.fullname" .)) }}
+  {{- end }}
   rules:
-    - host: {{ .Values.web.ingress.host | quote }}
+    {{- range .Values.nginx.ingress.hosts }}
+    - host: {{ . | quote }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ include "overviewer.fullname" . }}
+                name: {{ include "overviewer.fullname" $ }}
                 port:
                   name: http
+    {{- end }}
+{{- end }}

@@ -1,5 +1,5 @@
-{{- if .Values.render.persistence.enabled }}
-{{- if .Values.render.schedule.render }}
+{{- if .Values.persistence.enabled }}
+{{- if .Values.schedule.render }}
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -9,10 +9,14 @@ metadata:
     {{- include "overviewer.labels" . | nindent 4 }}
     app.kubernetes.io/component: render
 spec:
-  schedule: {{ .Values.render.schedule.render | quote }}
+  schedule: {{ .Values.schedule.render | quote }}
   concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      backoffLimit: 3
+      activeDeadlineSeconds: 3600
       template:
         metadata:
           labels:
@@ -22,8 +26,8 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: render
-              image: "{{ .Values.render.image.repository }}:{{ .Values.render.image.tag | default .Chart.AppVersion }}"
-              imagePullPolicy: {{ .Values.render.image.pullPolicy }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
               args:
                 - -c
                 - /overviewer/config.py
@@ -33,21 +37,26 @@ spec:
                   name: world
                 - mountPath: /overviewer
                   name: config
+                - mountPath: /overviewer/webassets
+                  name: webassets
                 - mountPath: /usr/share/nginx/html
                   name: map
               resources:
-                {{- toYaml .Values.render.resources | nindent 16 }}
+                {{- toYaml .Values.resources | nindent 16 }}
           volumes:
             - name: config
               configMap:
-                name: {{ include "overviewer.fullname" . }}
+                name: {{ include "overviewer.fullname" . }}-config
+            - name: webassets
+              configMap:
+                name: {{ include "overviewer.fullname" . }}-webassets
             - name: world
-              {{- toYaml .Values.render.worldVolume | nindent 14 }}
+              {{- toYaml .Values.worldVolume | nindent 14 }}
             - name: map
               persistentVolumeClaim:
                 claimName: {{ include "overviewer.fullname" . }}
 {{- end }}
-{{- if .Values.render.schedule.genpoi }}
+{{- if .Values.schedule.genpoi }}
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -57,10 +66,14 @@ metadata:
     {{- include "overviewer.labels" . | nindent 4 }}
     app.kubernetes.io/component: render
 spec:
-  schedule: {{ .Values.render.schedule.genpoi | quote }}
+  schedule: {{ .Values.schedule.genpoi | quote }}
   concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 60
       template:
         metadata:
           labels:
@@ -70,8 +83,8 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: genpoi
-              image: "{{ .Values.render.image.repository }}:{{ .Values.render.image.tag | default .Chart.AppVersion }}"
-              imagePullPolicy: {{ .Values.render.image.pullPolicy }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
               args:
                 - -c
                 - /overviewer/config.py
@@ -89,7 +102,7 @@ spec:
               configMap:
                 name: {{ include "overviewer.fullname" . }}
             - name: world
-              {{- toYaml .Values.render.worldVolume | nindent 14 }}
+              {{- toYaml .Values.worldVolume | nindent 14 }}
             - name: map
               persistentVolumeClaim:
                 claimName: {{ include "overviewer.fullname" . }}

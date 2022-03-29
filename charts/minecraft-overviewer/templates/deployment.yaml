@@ -1,26 +1,26 @@
-{{- if .Values.render.persistence.enabled }}
+{{- if .Values.persistence.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "overviewer.fullname" . }}-web
   labels:
     {{- include "overviewer.labels" . | nindent 4 }}
-    app.kubernetes.io/component: web
+    app.kubernetes.io/component: nginx
 spec:
   selector:
     matchLabels:
       {{- include "overviewer.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: web
+      app.kubernetes.io/component: nginx
   template:
     metadata:
       labels:
         {{- include "overviewer.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: web
+        app.kubernetes.io/component: nginx
     spec:
       containers:
         - name: nginx
-          image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.web.image.pullPolicy }}
+          image: "{{ .Values.nginx.image.repository }}:{{ .Values.nginx.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.nginx.image.pullPolicy }}
           volumeMounts:
             - mountPath: /usr/share/nginx/html
               readOnly: true
@@ -30,7 +30,7 @@ spec:
               containerPort: 80
               protocol: TCP
           resources:
-            {{- toYaml .Values.web.resources | nindent 12 }}
+            {{- toYaml .Values.nginx.resources | nindent 12 }}
           livenessProbe: &probe
             tcpSocket:
               port: http
