@@ -95,12 +95,17 @@ spec:
                   name: world
                 - mountPath: /overviewer
                   name: config
+                - mountPath: /overviewer/webassets
+                  name: webassets
                 - mountPath: /usr/share/nginx/html
                   name: map
           volumes:
             - name: config
               configMap:
-                name: {{ include "overviewer.fullname" . }}
+                name: {{ include "overviewer.fullname" . }}-config
+            - name: webassets
+              configMap:
+                name: {{ include "overviewer.fullname" . }}-webassets
             - name: world
               {{- toYaml .Values.worldVolume | nindent 14 }}
             - name: map

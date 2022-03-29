@@ -4,4 +4,4 @@ description: A high-resolution Minecraft world renderer with a LeafletJS interfa
 home: https://overviewer.org/
 name: minecraft-overviewer
 type: application
-version: 0.5.32
+version: 0.5.33
