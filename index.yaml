@@ -1,14 +1,15 @@
 apiVersion: v1
 entries:
-  powerdns:
+  minecraft-overviewer:
   - apiVersion: v2
-    appVersion: 4.5.2
-    created: "2022-01-08T11:50:49.379280475Z"
-    description: PowerDNS Authoritative
-    digest: b37e31ed54827af6f61e85a980468e93b47f0e0028485c2933880c84b72f26ee
-    name: powerdns
+    appVersion: 0.17.47-eb415c6-ovo
+    created: "2022-03-29T18:44:00.903255724Z"
+    description: A high-resolution Minecraft world renderer with a LeafletJS interface
+    digest: 4f1add7c986b1f6bb62291a417308e165e1a393efef0e902689cfebb5f4592ea
+    home: https://overviewer.org/
+    name: minecraft-overviewer
     type: application
     urls:
-    - https://github.com/arren-helios/helm-charts/releases/download/powerdns-0.3.9/powerdns-0.3.9.tgz
-    version: 0.3.9
-generated: "2022-01-08T11:50:49.156567458Z"
+    - https://github.com/arren-helios/helm-charts/releases/download/minecraft-overviewer-0.5.33/minecraft-overviewer-0.5.33.tgz
+    version: 0.5.33
+generated: "2022-03-29T18:44:00.608906474Z"
