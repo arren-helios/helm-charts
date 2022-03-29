@@ -65,14 +65,11 @@ spec:
               containerPort: 5300
             - name: http
               containerPort: 8081
-          readinessProbe:
+          readinessProbe: &probe
             tcpSocket:
               port: dns-tcp
             periodSeconds: 10
-          livenessProbe:
-            tcpSocket:
-              port: dns-tcp
-            periodSeconds: 20
+          livenessProbe: *probe
           securityContext:
             readOnlyRootFilesystem: true
             runAsNonRoot: true
