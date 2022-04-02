@@ -1,0 +1,7 @@
+apiVersion: v2
+name: http-echo
+description: HTTP Echo
+
+type: application
+version: 0.1.8
+appVersion: 0.2.3

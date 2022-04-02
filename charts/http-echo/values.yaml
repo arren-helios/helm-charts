@@ -1,0 +1,37 @@
+text: "ok"
+
+nameOverride: ""
+fullnameOverride: ""
+
+replicaCount: 1
+
+imagePullSecrets: []
+image:
+  repository: docker.helios.a/k8s/http-echo
+  pullPolicy: IfNotPresent
+  tag: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  className: ""
+  annotations: {}
+  hosts: []
+  tls: false
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+resources: {}
+podAnnotations: {}
+podSecurityContext: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
