@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "minecraft.fullname" . }}
+  labels:
+    {{- include "minecraft.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  serviceName: {{ include "minecraft.fullname" . }}
+  selector:
+    matchLabels:
+      {{- include "minecraft.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "minecraft.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: set-eula-true
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext: &securityContext
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          command:
+            - /bin/sh
+          args:
+            - -ec
+            - echo eula=true >eula.txt
+          volumeMounts:
+            - &runtimeVolume
+              mountPath: /var/lib/minecraft
+              name: runtime
+        - name: init-config
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          command:
+            - /bin/sh
+          args:
+            - -ec
+            - cat /server.properties.d/* >server.properties
+          volumeMounts:
+            - *runtimeVolume
+            - mountPath: /server.properties.d/config
+              name: config
+              subPath: server.properties
+            {{- if .Values.config.rcon.enabled }}
+            - mountPath: /server.properties.d/rcon
+              name: rcon
+              subPath: server.properties
+            {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            - *runtimeVolume
+            - mountPath: /var/lib/minecraft/world
+              name: world
+          ports:
+            - name: minecraft
+              containerPort: 25565
+              protocol: TCP
+            {{- if .Values.config.rcon.enabled }}
+            - name: rcon
+              containerPort: {{ .Values.config.rcon.port }}
+              protocol: TCP
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          startupProbe:
+            exec:
+              command: [mc-monitor, status]
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe: &probe
+            tcpSocket:
+              port: minecraft
+          livenessProbe: *probe
+      volumes:
+        - name: runtime
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: {{ include "minecraft.fullname" . }}-config
+        {{- if .Values.config.rcon.enabled }}
+        - name: rcon
+          secret:
+            secretName: {{ include "minecraft.fullname" . }}-rcon
+        {{- end }}
+        {{- if not .Values.persistence.enabled }}
+        - name: world
+          emptyDir: {}
+        {{- end }}
+{{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: world
+        labels:
+          {{- include "minecraft.labels" . | nindent 10 }}
+      spec:
+        storageClassName: {{ .Values.persistence.storageClass | default "" }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size | quote }}
+        accessModes:
+          {{- range .Values.persistence.accessModes }}
+          - {{ . | quote }}
+          {{- end }}
+        {{- if .Values.persistence.volumeName }}
+        volumeName: {{ .Values.persistence.volumeName | quote }}
+        {{- end }}
+{{- end }}

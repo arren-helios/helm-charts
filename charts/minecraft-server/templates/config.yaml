@@ -1,62 +1,48 @@
+{{- if .Values.config.rcon.enabled }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "minecraft.fullname" . }}-rcon
+  labels:
+    {{- include "minecraft.labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  server.properties: |
+    # Generated from kubernetes secret: {{ .Release.Namespace }}/{{ include "minecraft.fullname" . }}-rcon
+    rcon.password={{ .Values.config.rcon.password }}
+---
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "minecraft.fullname" . }}
+  name: {{ include "minecraft.fullname" . }}-config
   labels:
     {{- include "minecraft.labels" . | nindent 4 }}
 data:
   server.properties: |
-{{- if .Values.configInline }}
-{{- toYaml .Values.configInline | nindent 4 }}
-{{- else }}
-    server-ip=
-    server-port=25565
-    enable-rcon=false
-    rcon.password=
-    rcon.port=27015
-    enable-query=false
-    query.port=25565
-    allow-flight=false
-    allow-nether=true
-    announce-player-achievements=true
-    broadcast-console-to-ops=true
-    broadcast-rcon-to-ops=true
-    difficulty=1
-    enable-command-block=true
-    enable-jmx-monitoring=false
-    enable-status=true
-    enforce-whitelist=false
-    entity-broadcast-range-percentage=100
-    force-gamemode=false
-    function-permission-level=2
-    gamemode=0
-    generate-structures=true
-    generator-settings=
-    hardcore=false
-    level-name=world
-    level-seed=
-    level-type=DEFAULT
-    max-build-height=256
-    max-players=4
-    max-tick-time=60000
-    max-world-size=29999984
-    motd=
-    network-compression-threshold=256
-    online-mode=true
-    op-permission-level=4
-    player-idle-timeout=0
-    prevent-proxy-connections=false
-    pvp=true
-    resource-pack-sha1=
-    resource-pack=
-    snooper-enabled=false
-    spawn-animals=true
-    spawn-monsters=true
-    spawn-npcs=true
-    spawn-protection=16
-    sync-chunk-writes=true
-    texture-pack=
-    use-native-transport=true
-    view-distance=10
-    white-list=false
-{{- end }}
+    # Generated from kubernetes configmap: {{ .Release.Namespace }}/{{ include "minecraft.fullname" . }}-config
+    {{- with .Values.config }}
+    motd={{ .motd | trunc 59 }}
+    level-seed={{ .seed }}
+    gamemode={{ .gamemode }}
+    difficulty={{ .difficulty }}
+    hardcore={{ .hardcore }}
+    pvp={{ .pvp }}
+    generate-structures={{ .structures }}
+    spawn-animals={{ .spawnAnimals }}
+    spawn-monsters={{ .spawnMonsters }}
+    spawn-npcs={{ .spawnNpcs }}
+    spawn-protection={{ .spawnProtection }}
+    online-mode={{ .online }}
+    max-players={{ .maxPlayers }}
+    enable-status={{ .status }}
+    {{- if .resourcePack.url }}
+    resource-pack={{ .resourcePack.url }}
+    resource-pack-sha1={{ .resourcePack.sha1 }}
+    require-resource-pack={{ .resourcePack.require }}
+    {{- end }}
+    {{- if .rcon.enabled }}
+    enable-rcon={{ .rcon.enabled }}
+    rcon.port={{ .rcon.port }}
+    {{- end }}
+    {{- end }}

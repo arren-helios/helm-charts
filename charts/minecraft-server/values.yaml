@@ -5,8 +5,76 @@
 nameOverride: ""
 fullnameOverride: ""
 
+config:
+  # This is the message that is displayed in the server list of the client, below the name.
+  # The MOTD supports color and formatting codes. The MOTD supports special characters, such as ""♥"".
+  # However, such characters must be converted to escaped Unicode form.
+  # If the MOTD is over 59 characters, the server list may report a communication error."
+  motd: A Minecraft Server
+
+  # Sets a world seed for the player's world, as in Singleplayer.
+  # The world generates with a random seed if left blank.Some examples are: minecraft, 404, 1a2b3c.
+  seed: ""
+
+  # Defines the mode of gameplay.If a legacy gamemode number is specified, it is silently converted to a gamemode name.
+  # Values: survival, creative, adventure, spectator
+  gamemode: survival
+
+  # Defines the difficulty (such as damage dealt by mobs and the way hunger and poison affects players) off the server.
+  # Values: peaceful, easy, normal, hard
+  difficulty: normal
+
+  # If set to true, server difficulty is ignored and set to hard and players are set to spectator mode if they die.
+  hardcore: false
+
+  # Enable PvP on the server. Players shooting themselves with arrows receive damage only if PvP is enabled.
+  pvp: true
+
+  # Defines whether structures (such as villages) can be generated. Dungeons still generate if this is set to false.
+  #   false - Structures are not generated in new chunks.
+  #   true - Structures are generated in new chunks.
+  structures: true
+
+  spawnAnimals: true
+  spawnMonsters: true
+  spawnNpcs: true
+
+  # Determines the side length of the square spawn protection area as 2x+1
+  # Setting this to 0 disables the spawn protection.
+  # A value of 1 protects a 3×3 square centered on the spawn point. 2 protects 5×5, 3 protects 7×7, etc.
+  # This option is not generated on the first server start and appears when the first player joins.
+  # If there are no ops set on the server, the spawn protection is disabled automatically as well.
+  spawnProtection: 0
+
+  # Server checks connecting players against Minecraft account database.
+  # Set this to false only if the player's server is not connected to the Internet.
+  # If minecraft.net is down or inaccessible, no players can connect if this is set to true.
+  online: true
+
+  # The maximum number of players that can play on the server at the same time.
+  maxPlayers: 20
+
+  # Makes the server appear as "online" on the server list.
+  status: true
+
+  # Optional URI to a resource pack. The player may choose to use it.
+  # The resource pack may not have a larger file size than 250 MiB.
+  resourcePack:
+    url: ""
+    sha1: ""
+    require: false
+
+  # Enables remote access to the server console. It's not recommended to expose RCON to the Internet,
+  # because RCON protocol transfers everything without encryption.
+  # Everything (including RCON password) communicated between the RCON server and client can be leaked
+  # to someone listening in on your connection.
+  rcon:
+    enabled: false
+    port: 25575
+    password: ""
+
 image:
-  repository: docker.helios.a/minecraft-server
+  repository: r.helios.a/minecraft-server
   pullPolicy: IfNotPresent
   tag: ""
 
@@ -22,10 +90,21 @@ persistence:
   size: 10Gi
   storageClass: ""
 
-resources:
+resources: {}
   # limits:
   #   cpu: 2
   #   memory: 4Gi
   # requests:
   #   cpu: 1
   #   memory: 2Gi
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+podSecurityContext:
+  fsGroup: 2000

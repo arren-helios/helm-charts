@@ -14,5 +14,11 @@ spec:
       targetPort: minecraft
       protocol: TCP
       name: minecraft
+    {{- if .Values.config.rcon.enabled }}
+    - port: {{ .Values.config.rcon.port }}
+      targetPort: rcon
+      protocol: TCP
+      name: rcon
+    {{- end }}
   selector:
     {{- include "minecraft.selectorLabels" . | nindent 4 }}
