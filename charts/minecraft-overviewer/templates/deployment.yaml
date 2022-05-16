@@ -17,17 +17,30 @@ spec:
         {{- include "overviewer.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: nginx
     spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: nginx
           image: "{{ .Values.nginx.image.repository }}:{{ .Values.nginx.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.nginx.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          command: ["nginx"]
+          args: ["-g", "daemon off;"]
           volumeMounts:
-            - mountPath: /usr/share/nginx/html
+            - mountPath: /run/nginx
+              name: runtime
+            - mountPath: /var/cache/nginx
+              name: cache
+            - mountPath: /etc/nginx/nginx.conf
+              name: config
+              subPath: nginx.conf
+            - mountPath: /srv/http
               readOnly: true
               name: map
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
               protocol: TCP
           resources:
             {{- toYaml .Values.nginx.resources | nindent 12 }}
@@ -36,6 +49,14 @@ spec:
               port: http
           readinessProbe: *probe
       volumes:
+        - name: runtime
+          emptyDir:
+            medium: Memory
+        - name: cache
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: {{ include "overviewer.fullname" . }}-nginx
         - name: map
           persistentVolumeClaim:
             claimName: {{ include "overviewer.fullname" . }}

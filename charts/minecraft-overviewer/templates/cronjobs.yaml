@@ -24,23 +24,44 @@ spec:
             app.kubernetes.io/component: render
         spec:
           restartPolicy: OnFailure
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          initContainers:
+            - name: cleanup
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              securityContext:
+                {{- toYaml .Values.securityContext | nindent 16 }}
+              args:
+                - -ec
+                - find /usr/share/nginx/html -type d -name '..*' -exec rm -rf {} +
+              command:
+                - /bin/sh
+              volumeMounts:
+                - &mapVolume
+                  mountPath: /usr/share/nginx/html
+                  name: map
           containers:
             - name: render
               image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
               imagePullPolicy: {{ .Values.image.pullPolicy }}
+              securityContext:
+                {{- toYaml .Values.securityContext | nindent 16 }}
               args:
                 - -c
-                - /overviewer/config.py
+                - /usr/share/overviewer/config.py
               volumeMounts:
+                - *mapVolume
                 - mountPath: /var/lib/minecraft/world
                   readOnly: true
                   name: world
-                - mountPath: /overviewer
+                - mountPath: /usr/share/overviewer/config.py
                   name: config
-                - mountPath: /overviewer/webassets
+                  subPath: config.py
+                - mountPath: /usr/share/overviewer/webassets
                   name: webassets
-                - mountPath: /usr/share/nginx/html
-                  name: map
+                - mountPath: /var/lib/overviewer/dcache
+                  name: dcache
               resources:
                 {{- toYaml .Values.resources | nindent 16 }}
           volumes:
@@ -55,6 +76,8 @@ spec:
             - name: map
               persistentVolumeClaim:
                 claimName: {{ include "overviewer.fullname" . }}
+            - name: dcache
+              emptyDir: {}
 {{- end }}
 {{- if .Values.schedule.genpoi }}
 ---
@@ -81,21 +104,26 @@ spec:
             app.kubernetes.io/component: render
         spec:
           restartPolicy: OnFailure
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
           containers:
             - name: genpoi
               image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
               imagePullPolicy: {{ .Values.image.pullPolicy }}
+              securityContext:
+                {{- toYaml .Values.securityContext | nindent 16 }}
               args:
                 - -c
-                - /overviewer/config.py
+                - /usr/share/overviewer/config.py
                 - --genpoi
               volumeMounts:
                 - mountPath: /var/lib/minecraft/world
                   readOnly: true
                   name: world
-                - mountPath: /overviewer
+                - mountPath: /usr/share/overviewer/config.py
                   name: config
-                - mountPath: /overviewer/webassets
+                  subPath: config.py
+                - mountPath: /usr/share/overviewer/webassets
                   name: webassets
                 - mountPath: /usr/share/nginx/html
                   name: map

@@ -6,7 +6,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 schedule:
-  render: "*/15 * * * *"
+  render: "0 * * * *"
   genpoi: "*/5 * * * *"
 
 config:
@@ -35,8 +35,8 @@ config:
                 return poi['name'] + '\n'
   markers:
     players: dict(name="Players", filterFunction=playerIcons, checked=True, createInfoWindow=False)
-    towns: dict(name="Signs", filterFunction=signFilter)
-    signs: dict(name="Towns", filterFunction=townFilter, icon="markers/marker_town.png")
+    signs: dict(name="Signs", filterFunction=signFilter)
+    towns: dict(name="Towns", filterFunction=townFilter, icon="markers/marker_town.png")
 
   renders:
     - name: day
@@ -69,7 +69,7 @@ persistence:
   storageClass: ""
 
 image:
-  repository: docker.helios.a/minecraft-overviewer
+  repository: r.helios.a/minecraft-overviewer
   pullPolicy: IfNotPresent
   tag: ""
 
@@ -80,6 +80,17 @@ resources: {}
   # requests:
   #   cpu: 1
   #   memory: 1Gi
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+podSecurityContext:
+  fsGroup: 2000
 
 nginx:
   ingress:
@@ -94,7 +105,7 @@ nginx:
       # kubernetes.io/tls-acme: "true"
 
   image:
-    repository: docker.helios.a/nginx
+    repository: r.helios.a/nginx
     pullPolicy: IfNotPresent
     tag: 1.21-alpine
 

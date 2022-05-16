@@ -10,8 +10,8 @@ data:
   config.py: |
     worlds[{{ .Values.config.worldName | quote }}] = "/var/lib/minecraft/world"
     outputdir = "/usr/share/nginx/html"
-    texturepath = "/opt/textures"
-    customwebassets = "/overviewer/webassets"
+    texturepath = "/usr/share/overviewer/textures"
+    customwebassets = "/usr/share/overviewer/webassets"
     defaultzoom = {{ .Values.config.defaultZoom }}
     processes = {{ .Values.config.processes }}
 
@@ -50,18 +50,27 @@ data:
     <!DOCTYPE html>
     <html>
       <head>
-        <title>{title}</title>
+        <title>Minecraft World</title>
+
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <meta name="generator" content="Minecraft-Overviewer {version}" />
         <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+
         <script type="text/javascript" src="overviewerConfig.js"></script>
         <script type="text/javascript" src="overviewer.js"></script>
         <script type="text/javascript" src="baseMarkers.js"></script>
+
         <link rel="stylesheet" href="leaflet.css" />
         <script src="leaflet.js"></script>
         <link rel="stylesheet" href="overviewer.css" type="text/css" />
       </head>
+
       <body onload="overviewer.util.initialize()">
+        <noscript style="color: white; background-color: black">
+          If you can see this message, there is likely a problem loading the
+          Overviewer JavaScript components. Check the JavaScript console for error
+          messages.
+        </noscript>
         <div id="mcmap"></div>
         <script type="text/javascript">
             overviewer.util.ready(function() {
@@ -72,3 +81,33 @@ data:
         </script>
       </body>
     </html>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "overviewer.fullname" . }}-nginx
+  labels:
+    {{- include "overviewer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: nginx
+data:
+  nginx.conf: |
+    worker_processes 1;
+    pid /run/nginx/nginx.pid;
+
+    events {
+        worker_connections 1024;
+    }
+
+    http {
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+        access_log off;
+        sendfile on;
+        keepalive_timeout 65;
+
+        server {
+            listen 8080 default;
+            root /srv/http;
+            index index.html;
+        }
+    }
