@@ -1,60 +1,42 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "fullname" . }}
+  name: {{ include "powerdns.fullname" . }}
   labels:
-    {{- include "labels" . | nindent 4 }}
+    {{- include "powerdns.labels" . | nindent 4 }}
 spec:
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "selectorLabels" . | nindent 6 }}
+      {{- include "powerdns.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
-        {{- include "selectorLabels" . | nindent 8 }}
+        {{- include "powerdns.selectorLabels" . | nindent 8 }}
     spec:
-      automountServiceAccountToken: false
-      volumes:
-        - name: config
-          configMap:
-            name: config
-        - name: socket-dir
-          emptyDir:
-            medium: Memory
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: Always
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
+            - --local-address=0.0.0.0
             - --local-port=5300
-            - --gpgsql-user=$(POWERDNS_GPGSQL_USER)
-            - --gpgsql-password=$(POWERDNS_GPGSQL_PASSWORD)
-            {{- if and .Values.webserver.enabled .Values.webserver.api }}
-            - --api-key=$(POWERDNS_API_KEY)
-            {{- end }}
-            - --default-soa-edit=INCEPTION-INCREMENT
-            - --default-soa-edit-signed=INCEPTION-INCREMENT
-          env:
-            {{- if and .Values.webserver.enabled .Values.webserver.api }}
-            - name: POWERDNS_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: webserver
-                  key: api-key
-            {{- end }}
-            - name: POWERDNS_GPGSQL_USER
-              valueFrom:
-                secretKeyRef:
-                  name: gpgsql
-                  key: user
-            - name: POWERDNS_GPGSQL_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: gpgsql
-                  key: password
           volumeMounts:
-            - mountPath: /etc/pdns
+            - mountPath: /etc/pdns/pdns.conf
               name: config
+              subPath: pdns.conf
             - mountPath: /var/run/pdns
               name: socket-dir
           ports:
@@ -63,16 +45,28 @@ spec:
               protocol: UDP
             - name: dns-tcp
               containerPort: 5300
-            - name: http
-              containerPort: 8081
           readinessProbe: &probe
             tcpSocket:
               port: dns-tcp
-            periodSeconds: 10
           livenessProbe: *probe
-          securityContext:
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            runAsUser: 1000
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          secret:
+            secretName: {{ include "powerdns.fullname" . }}-config
+        - name: socket-dir
+          emptyDir:
+            medium: Memory
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

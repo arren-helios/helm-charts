@@ -1,27 +1,22 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "fullname" . }}
+  name: {{ include "powerdns.fullname" . }}
   labels:
-    {{- include "labels" . | nindent 4 }}
+    {{- include "powerdns.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
-  {{- with .Values.service.ip }}
-  loadBalancerIP: {{ . }}
+  {{- if and .Values.service.loadBalancerIP (eq .Values.service.type "LoadBalancer") }}
+  loadBalancerIP: {{ .Values.service.loadBalancerIP }}
   {{- end }}
   ports:
-    - name: dns
-      port: {{ .Values.service.dnsPort }}
+    - port: {{ .Values.service.port }}
       targetPort: dns
       protocol: UDP
-    - name: dns-tcp
-      port: {{ .Values.service.dnsPort }}
+      name: dns
+    - port: {{ .Values.service.port }}
       targetPort: dns-tcp
       protocol: TCP
-    {{- if and .Values.webserver.enabled }}
-    - name: http
-      port: {{ .Values.service.httpPort }}
-      targetPort: http
-    {{- end }}
+      name: dns-tcp
   selector:
-    {{- include "selectorLabels" . | nindent 4 }}
+    {{- include "powerdns.selectorLabels" . | nindent 4 }}

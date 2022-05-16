@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "powerdns.fullname" . }}-config
+  labels:
+    {{- include "powerdns.labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  pdns.conf: |
+    {{- with .Values.config.gpgsql }}
+    launch=gpgsql
+    {{- if .dnssec }}
+    gpgsql-dnssec=yes
+    {{- end }}
+    gpgsql-dbname={{ .dbname }}
+    gpgsql-host={{ .host }}
+    gpgsql-user={{ .dbname }}
+    gpgsql-password={{ .password }}
+    {{- end }}
+    {{- .Values.config.inlineConfig | nindent 4 }}
