@@ -1,15 +1,27 @@
 apiVersion: v1
 entries:
-  powerdns:
+  minecraft-overviewer:
   - apiVersion: v2
-    appVersion: 4.6.0
-    created: "2022-05-16T09:10:25.138581588Z"
-    description: PowerDNS Authoritative
-    digest: c34b3fc594184aad8fc4c98ea43ab5d0dc509f80793d1c85dd397cbfd72d5d8f
-    home: https://www.powerdns.com
-    name: powerdns
+    appVersion: 0.17.47-eb415c6-ovo
+    created: "2022-05-16T09:12:43.903833449Z"
+    description: A high-resolution Minecraft world renderer with a LeafletJS interface
+    digest: 6883a6488702876194fed0d7a607bae599a35ca8dec487614a8e8cc05950b75f
+    home: https://overviewer.org/
+    name: minecraft-overviewer
     type: application
     urls:
-    - https://github.com/arren-helios/helm-charts/releases/download/powerdns-0.5.5/powerdns-0.5.5.tgz
-    version: 0.5.5
-generated: "2022-05-16T09:10:24.863840879Z"
+    - https://github.com/arren-helios/helm-charts/releases/download/minecraft-overviewer-0.5.47/minecraft-overviewer-0.5.47.tgz
+    version: 0.5.47
+  minecraft-server:
+  - apiVersion: v2
+    appVersion: 1.18.2
+    created: "2022-05-16T09:12:44.134580972Z"
+    description: Minecraft game server
+    digest: 447178db6e7998dff146647e311d7dd86ffc0df9474805c2fe90d126e1fcd0ba
+    home: https://www.minecraft.net
+    name: minecraft-server
+    type: application
+    urls:
+    - https://github.com/arren-helios/helm-charts/releases/download/minecraft-server-0.6.42/minecraft-server-0.6.42.tgz
+    version: 0.6.42
+generated: "2022-05-16T09:12:43.62676796Z"
