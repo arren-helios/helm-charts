@@ -1,7 +1,7 @@
 apiVersion: v2
-appVersion: 4.6.0
+appVersion: 4.6.3
 description: PowerDNS Authoritative
 home: https://www.powerdns.com
 name: powerdns
 type: application
-version: 0.5.5
+version: 0.5.7

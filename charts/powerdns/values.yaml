@@ -14,7 +14,7 @@ config:
     default-soa-edit-signed=INCEPTION-INCREMENT
 
 image:
-  repository: r.helios.a/powerdns
+  repository: helios.a/powerdns
   pullPolicy: IfNotPresent
   tag: ""
 

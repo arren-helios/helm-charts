@@ -34,7 +34,7 @@ spec:
             - --local-address=0.0.0.0
             - --local-port=5300
           volumeMounts:
-            - mountPath: /etc/pdns/pdns.conf
+            - mountPath: /usr/local/etc/pdns.conf
               name: config
               subPath: pdns.conf
             - mountPath: /var/run/pdns
